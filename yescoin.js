@@ -388,7 +388,7 @@ class YescoinClient {
 
             if (response.status == 200 && response.data.code === 0) {
                 const box = response.data.data.autoBox || response.data.data.recoveryBox;
-                if (box.boxStatus) this.log(`Tìm thấy 1 special box`, 'info');
+                if (box?.boxStatus) this.log(`Tìm thấy 1 special box`, 'info');
                 else this.log("Không có special box");
                 return box;
             } else {
@@ -396,6 +396,7 @@ class YescoinClient {
                 return null;
             }
         } catch (error) {
+            console.log(error.message);
             this.log("Có lỗi xảy ra khi get special box", "error");
             return null;
         }
@@ -415,7 +416,7 @@ class YescoinClient {
                 "boxType": box.boxType,
                 "coinCount": box.specialBoxTotalCount
             }
-            const response = await axios.get(url, payload, { headers });
+            const response = await axios.post(url, payload, { headers });
 
             if (response.status == 200 && response.data.code === 0) {
                 const coin = response.data.data.collectAmount;
@@ -423,6 +424,30 @@ class YescoinClient {
                 return 1;
             } else {
                 this.log(`Không thể nhận coin từ box: ${response.data.message}`, 'error');
+                return 0;
+            }
+        } catch (error) {
+            this.log("Có lỗi xảy ra", "error");
+            return 0;
+        }
+    }
+
+    async triggerRecoverBox(token) {
+        const url = `https://bi.yescoin.gold/game/recoverSpecialBox`;
+
+        try {
+            const headers = {
+                ...this.headers,
+                "Token": token,
+                "Content-Type": "application/json"
+            };
+            const response = await axios.post(url, undefined, { headers });
+
+            if (response.status == 200 && response.data.code === 0) {
+                this.log(`Kích hoạt recovery box thành công`);
+                return 1;
+            } else {
+                this.log(`Không còn recover để kích hoạt`, 'error');
                 return 0;
             }
         } catch (error) {
@@ -453,6 +478,7 @@ class YescoinClient {
                             const profileData = await this.fetchUserProfile(token);
                             await this.processMissions(token);
                             await this.processTasks(token);
+                            await this.triggerRecoverBox(token);
                             const box = await this.getSpecialBox(token);
                             if (box) await this.collectSpecialBox(token, box)
                         }
