@@ -387,7 +387,7 @@ class YescoinClient {
             const response = await axios.get(url, { headers });
 
             if (response.status == 200 && response.data.code === 0) {
-                const box = response.data.data.autoBox;
+                const box = response.data.data.autoBox || response.data.data.recoveryBox;
                 if (box.boxStatus) this.log(`Tìm thấy 1 special box`, 'info');
                 else this.log("Không có special box");
                 return box;
